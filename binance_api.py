@@ -212,13 +212,16 @@ class ParallelDownloader:
     def get_symbols(self, quoteAsset="USDT"):
         client = Spot(proxies=self.proxies)
         exchange_info = client.exchange_info()
+        # check if symbols are actively traded
         symbols = [
             symbol["symbol"]
             for symbol in exchange_info["symbols"]
             if symbol["isSpotTradingAllowed"]
             and symbol["isMarginTradingAllowed"]
             and symbol["quoteAsset"] == quoteAsset
+            and symbol["status"] == "TRADING"
         ]
+
         return symbols
 
     def get_latest_date(self):
@@ -248,9 +251,10 @@ if __name__ == "__main__":
     today = datetime.today()
     end_date = datetime(today.year, today.month, today.day) - timedelta(days=1)
 
-    dates = ParallelDownloader.get_date_range(start_date, end_date)
+    end_date = datetime(2024, 3, 17)
+    # dates = ParallelDownloader.get_date_range(start_date, end_date)
     cryptos = downloader.get_symbols()
-    for date in dates:
+    for date in [end_date]:
         for symbol in cryptos:
             if not os.path.exists(
                 os.path.join(
