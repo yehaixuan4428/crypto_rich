@@ -1,0 +1,1 @@
+Awesome reference for the backtrader example and the data: https://medium.com/@gk_/crypto-quant-programmatic-trading-of-btc-using-binance-and-backtrader-part-1-of-3-d8af44c93e2b (There are three parts)
