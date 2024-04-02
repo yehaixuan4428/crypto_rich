@@ -417,7 +417,9 @@ class BinanceTools:
         The function runs an infinite loop to continuously check for pending tasks and sleeps for 0.5 seconds between checks.
         """
         schedule.every().minute.at(":01").do(BinanceTools.update_1min_data)
-        schedule.every().minute.at(":10").do(BinanceTools.check_today_data_integrity)
+
+        # this might cause connection error
+        # schedule.every().minute.at(":10").do(BinanceTools.check_today_data_integrity)
 
         while True:
             schedule.run_pending()
