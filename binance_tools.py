@@ -319,16 +319,16 @@ class BinanceTools:
             Exception: If there is an error in the main function, it sends an error message via a bot.
 
         """
-        try:
-            binance_client = BinanceTools.create_binance_client()
-            ddb_client = BinanceTools.create_ddb_client()
-            coins = ["BTCUSDT", "ETHUSDT"]
-            db_path = "dfs://crypto_kline"
-            table_name = "kline_1min"
-            get_correct_data = False
-            max_try = 10
-            cur_time = datetime.datetime.now()
-            while not get_correct_data and max_try > 0:
+        max_try = 10
+        get_correct_data = False
+        cur_time = datetime.datetime.now()
+        ddb_client = BinanceTools.create_ddb_client()
+        coins = ["BTCUSDT", "ETHUSDT"]
+        db_path = "dfs://crypto_kline"
+        table_name = "kline_1min"
+        while (not get_correct_data) and max_try > 0:
+            try:
+                binance_client = BinanceTools.create_binance_client()
                 data = BinanceTools.get_latest_data(binance_client, coins)
                 print(
                     "Updating data... at ",
@@ -340,12 +340,37 @@ class BinanceTools:
                 if get_correct_data:
                     print(data)
                     BinanceTools.insert_data(ddb_client, data, db_path, table_name)
-                else:
-                    time.sleep(1)
+                    break
+
+                for coin in coins:
+                    if (
+                        data.loc[data["symbol"] == coin, "open_time"].dt.minute
+                        > cur_time.minute
+                    ).all():
+                        old_data = BinanceTools.get_data(
+                            binance_client,
+                            [coin],
+                            cur_time - datetime.timedelta(minutes=1),
+                            cur_time,
+                        )
+                        if len(old_data) != 0:
+                            BinanceTools.insert_data(
+                                ddb_client, old_data, db_path, table_name
+                            )
+
+                if (data["open_time"].dt.minute < cur_time.minute).any():
+                    print("data is partial, wait for 2 seconds")
+                    time.sleep(2)
                     max_try -= 1
-        except Exception as e:
-            bot = BinanceTools.create_bot()
-            bot.Send_Text_Msg(f"Error in main function: {e}")
+                else:
+                    break
+            except Exception as e:
+                bot = BinanceTools.create_bot()
+                bot.Send_Text_Msg(
+                    f"Error occurs at {pd.Timestamp.now()} .Error in main function: {e}, max_try: {max_try}"
+                )
+                time.sleep(2)
+                max_try -= 1
 
     @staticmethod
     def repair_database_previous_hour():
