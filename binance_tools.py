@@ -102,20 +102,21 @@ class BinanceTools:
         Returns:
             None
         """
-        s = ddb.session()
-        s.connect("localhost", 8902, "admin", "123456")
-        s.run("dbPath = 'dfs://crypto_kline'")
-        s.run("tableName = 'kline_1min'")
-        s.run("if(existsDatabase(dbPath)){dropDatabase(dbPath)}")
-        s.run('db1 = database("", VALUE, 2020.01.01..2024.12.31)')
-        s.run('db2 = database("", HASH,[SYMBOL,3])')
-        s.run("db = database(dbPath,COMPO, [db1,db2], engine = 'TSDB')")
-        s.run(
-            "t = table(1:0, `open_time`open`high`low`close`volume`close_time`quote_asset_volume`number_of_trades`taker_buy_base_asset_volume`taker_buy_quote_asset_volume`symbol, [TIMESTAMP, DOUBLE, DOUBLE, DOUBLE, DOUBLE, DOUBLE, TIMESTAMP, DOUBLE, INT, DOUBLE, DOUBLE, SYMBOL])"
-        )
-        s.run(
-            f"db.createPartitionedTable(t, tableName, `open_time`symbol, sortColumns = `symbol`open_time, keepDuplicates = LAST)"
-        )
+        # s = ddb.session()
+        # s.connect("localhost", 8902, "admin", "123456")
+        # s.run("dbPath = 'dfs://crypto_kline'")
+        # s.run("tableName = 'kline_1min'")
+        # s.run("if(existsDatabase(dbPath)){dropDatabase(dbPath)}")
+        # s.run('db1 = database("", VALUE, 2020.01.01..2024.12.31)')
+        # s.run('db2 = database("", HASH,[SYMBOL,3])')
+        # s.run("db = database(dbPath,COMPO, [db1,db2], engine = 'TSDB')")
+        # s.run(
+        #     "t = table(1:0, `open_time`open`high`low`close`volume`close_time`quote_asset_volume`number_of_trades`taker_buy_base_asset_volume`taker_buy_quote_asset_volume`symbol, [TIMESTAMP, DOUBLE, DOUBLE, DOUBLE, DOUBLE, DOUBLE, TIMESTAMP, DOUBLE, INT, DOUBLE, DOUBLE, SYMBOL])"
+        # )
+        # s.run(
+        #     f"db.createPartitionedTable(t, tableName, `open_time`symbol, sortColumns = `symbol`open_time, keepDuplicates = LAST)"
+        # )
+        pass
 
     @staticmethod
     def insert_data(ddb_session, data, db_path, table_name):
