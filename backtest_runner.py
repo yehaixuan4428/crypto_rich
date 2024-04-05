@@ -9,15 +9,18 @@ if __name__ == "__main__":
     commission_val = 0.0075  # spot% taker fees binance usdt futures
     start_portfolio = 100000.0
     portfolio = start_portfolio
-    stake_val = 1
+    stake_val = 1.0
+
+    ### strategy parameters
+    strategy = RSIStrategy
     quantity = 0.10
     period = 12
     stopLoss = 0
     limits = [70, 30]
     plot = True
 
-    start_date = pd.to_datetime("20240201")
-    end_date = pd.to_datetime("20240202")
+    start_date = pd.to_datetime("20240301")
+    end_date = pd.to_datetime("20240310")
 
     ddb_client = BinanceTools.create_ddb_client()
     t = ddb_client.loadTable(dbPath="dfs://crypto_kline", tableName="kline_1min")
@@ -32,7 +35,7 @@ if __name__ == "__main__":
     print(data)
 
     end_val, totalwin, totalloss, pnl_net, sqn = run_backtest(
-        strategy=RSIStrategy,
+        strategy=strategy,
         data=data,
         maperiod=period,
         quantity=quantity,
