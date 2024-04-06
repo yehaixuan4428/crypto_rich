@@ -56,7 +56,7 @@ class BinanceTools:
             )
 
     @staticmethod
-    @retrying.retry(wait_fixed=2000, stop_max_attempt_number=10)
+    @retrying.retry(wait_random_min=1000, wait_random_max=3000)
     def create_binance_client():
         """
         Creates a Binance client object using the provided API key and secret.
@@ -74,6 +74,9 @@ class BinanceTools:
             client = Client(api_key, api_secret, {"proxies": proxies})
             return client
         except KeyError:
+            print(
+                "BINANCE_API_KEY and BINANCE_API_SECRET environment variables must be set."
+            )
             raise KeyError(
                 "BINANCE_API_KEY and BINANCE_API_SECRET environment variables must be set."
             )
@@ -184,6 +187,7 @@ class BinanceTools:
         return data
 
     @staticmethod
+    @retrying.retry(wait_random_min=1000, wait_random_max=3000)
     def get_latest_data(client, symbols):
         """
         Retrieves the latest data for the given symbols from the Binance API.
@@ -209,6 +213,7 @@ class BinanceTools:
         return data
 
     @staticmethod
+    @retrying.retry(wait_random_min=1000, wait_random_max=3000)
     def get_data(client, symbols, start_dt, end_dt):
         """
         Retrieves historical data for the specified symbols from Binance.
@@ -222,20 +227,24 @@ class BinanceTools:
         Returns:
             pandas.DataFrame: The historical data for the specified symbols. Data at the end_dt is excluded.
         """
-        start_dt = BinanceTools.to_utc(start_dt)
-        end_dt = BinanceTools.to_utc(end_dt)
+        try:
+            start_dt = BinanceTools.to_utc(start_dt)
+            end_dt = BinanceTools.to_utc(end_dt)
 
-        start_dt = int(start_dt.timestamp() * 1000)
-        end_dt = int(end_dt.timestamp() * 1000) - 1
+            start_dt = int(start_dt.timestamp() * 1000)
+            end_dt = int(end_dt.timestamp() * 1000) - 1
 
-        data = pd.DataFrame()
-        for symbol in symbols:
-            cur_data = client.get_historical_klines(
-                symbol, Client.KLINE_INTERVAL_1MINUTE, start_dt, end_dt
-            )
-            cur_data = BinanceTools.convert_data(symbol, cur_data)
-            data = pd.concat([data, cur_data])
-        return data
+            data = pd.DataFrame()
+            for symbol in symbols:
+                cur_data = client.get_historical_klines(
+                    symbol, Client.KLINE_INTERVAL_1MINUTE, start_dt, end_dt
+                )
+                cur_data = BinanceTools.convert_data(symbol, cur_data)
+                data = pd.concat([data, cur_data])
+            return data
+        except Exception as e:
+            print(f"get_data error: {e}")
+            raise e
 
     @staticmethod
     def check_values(db_path, table_name):
