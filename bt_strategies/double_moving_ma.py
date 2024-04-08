@@ -16,14 +16,14 @@ class CrossOverStrategy(bt.Strategy):
     T日收盘产生信号,T+1日开盘买入
     """
 
-    params = (("verbose", True), ("periods", 5))
+    params = (("verbose", True), ("periods", 5), ("execute_every", 15))
     import datetime as dt
 
     def log(
         self, txt: str, current_dt: dt.datetime = None, verbose: bool = True
     ) -> None:
         if verbose:
-            current_dt = current_dt or self.datas[0].datetime.date(0)
+            current_dt = current_dt or self.datas[0].datetime.datetime(0)
             print(f"{current_dt.isoformat()},{txt}")
 
     def __init__(self) -> None:
@@ -32,16 +32,20 @@ class CrossOverStrategy(bt.Strategy):
         self.signal = IcuMaInd(self.data, N=self.p.periods)  # 使用自定义指标
         # self.data.signal
         self.crossover = bt.indicators.CrossOver(self.data.close, self.signal)
+        self.counter = 0
 
     def next(self):
-        # 检查是否有持仓
-        if not self.position:
-            # 10日均线上穿5日均线，买入
-            if self.crossover > 0:
-                self.order = self.order_target_percent(target=0.95)
-        # # 10日均线下穿5日均线，卖出
-        elif self.crossover < 0:
-            self.order = self.close()  # 平仓，以下一日开盘价卖出
+        self.counter += 1
+
+        if self.counter % self.p.execute_every == 0:
+            # 检查是否有持仓
+            if not self.position:
+                # 10日均线上穿5日均线，买入
+                if self.crossover > 0:
+                    self.order = self.order_target_percent(target=0.95)
+            # # 10日均线下穿5日均线，卖出
+            elif self.crossover < 0:
+                self.order = self.close()  # 平仓，以下一日开盘价卖出
 
     def notify_order(self, order):
         # 未被处理的订单

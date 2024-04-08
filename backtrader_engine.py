@@ -61,7 +61,8 @@ def run_backtest(
             bt.sizers.FixedSize, stake=kwargs.get("stake_val")
         )  # Multiply the stake by X
 
-    cerebro.broker.setcash(kwargs.get("portfolio"))
+    initial_cash_value = kwargs.get("portfolio")
+    cerebro.broker.setcash(initial_cash_value)
 
     if kwargs.get("commission_val"):
         cerebro.broker.setcommission(commission=kwargs.get("commission_val") / 100)
@@ -79,8 +80,11 @@ def run_backtest(
         datetime="open_time",
         openinterest=None,
         timeframe=bt.TimeFrame.Minutes,
+        name="BTCUSDT",
     )
-    cerebro.adddata(data)
+    # cerebro.adddata(data)
+
+    cerebro.resampledata(data, timeframe=bt.TimeFrame.Minutes, compression=1440)
 
     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="ta")
     cerebro.addanalyzer(bt.analyzers.SQN, _name="sqn")
@@ -95,6 +99,22 @@ def run_backtest(
         totalwin, totalloss, pnl_net = 0, 0, 0
 
     sqn = getSQN(stratexe.analyzers.sqn.get_analysis())
+
+    start_portfolio = initial_cash_value
+    profit = (pnl_net / start_portfolio) * 100
+    end_val = cerebro.broker.getvalue()
+
+    # view the data in the console while processing
+    print(
+        "Net $%.2f (%.2f%%) WL %d/%d SQN %.2f"
+        % (
+            end_val - start_portfolio,
+            (end_val - start_portfolio) / start_portfolio * 100,
+            totalwin,
+            totalloss,
+            sqn,
+        )
+    )
 
     if kwargs.get("plot", False):
         cerebro.plot()

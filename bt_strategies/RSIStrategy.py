@@ -116,111 +116,111 @@ class RSIStrategy(bt.Strategy):
 # ______________________ End Strategy Classes
 
 
-def timeFrame(datapath):
-    """
-    Select the write compression and timeframe.
-    """
-    sepdatapath = datapath[5:-4].split(sep="-")  # ignore name file 'data/' and '.csv'
-    tf = sepdatapath[3]
+# def timeFrame(datapath):
+#     """
+#     Select the write compression and timeframe.
+#     """
+#     sepdatapath = datapath[5:-4].split(sep="-")  # ignore name file 'data/' and '.csv'
+#     tf = sepdatapath[3]
 
-    if tf == "1m":
-        compression = 1
-        timeframe = bt.TimeFrame.Minutes
-    else:
-        print("dataframe not recognized")
-        exit()
+#     if tf == "1m":
+#         compression = 1
+#         timeframe = bt.TimeFrame.Minutes
+#     else:
+#         print("dataframe not recognized")
+#         exit()
 
-    return compression, timeframe
-
-
-def getWinLoss(analyzer):
-    return analyzer.won.total, analyzer.lost.total, analyzer.pnl.net.total
+#     return compression, timeframe
 
 
-def getSQN(analyzer):
-    return round(analyzer.sqn, 2)
+# def getWinLoss(analyzer):
+#     return analyzer.won.total, analyzer.lost.total, analyzer.pnl.net.total
 
 
-def runbacktest(
-    datapath,
-    start,
-    end,
-    period,
-    strategy,
-    upper=70,
-    lower=30,
-    commission_val=None,
-    portofolio=10000.0,
-    stake_val=1,
-    quantity=0.01,
-    stopLoss=0.0,
-    plt=False,
-):
-
-    # Create a cerebro entity
-    cerebro = bt.Cerebro()
-
-    # Add a FixedSize sizer according to the stake
-    cerebro.addsizer(bt.sizers.FixedSize, stake=stake_val)  # Multiply the stake by X
-
-    cerebro.broker.setcash(portofolio)
-
-    if commission_val:
-        cerebro.broker.setcommission(commission=commission_val / 100)
-
-    # Add a strategy
-    if strategy == "RSI":
-        cerebro.addstrategy(
-            RSIStrategy,
-            maperiod=period,
-            quantity=quantity,
-            stopLoss=stopLoss,
-            upper=upper,
-            lower=lower,
-        )
-    else:
-        print("no strategy")
-        exit()
-
-    compression, timeframe = timeFrame(datapath)
-
-    # Create a Data Feed
-    data = bt.feeds.GenericCSVData(
-        dataname=datapath,
-        dtformat=2,
-        compression=compression,
-        timeframe=timeframe,
-        fromdate=datetime.datetime.strptime(start, "%Y-%m-%d"),
-        todate=datetime.datetime.strptime(end, "%Y-%m-%d"),
-        reverse=False,
-    )
-
-    # Add the Data Feed to Cerebro
-    cerebro.adddata(data)
-
-    cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="ta")
-    cerebro.addanalyzer(bt.analyzers.SQN, _name="sqn")
-
-    #    try:     # convenience try/exception block
-    if True:
-        strat = cerebro.run()
-        stratexe = strat[0]
-
-        try:
-            totalwin, totalloss, pnl_net = getWinLoss(
-                stratexe.analyzers.ta.get_analysis()
-            )
-        except KeyError:
-            totalwin, totalloss, pnl_net = 0, 0, 0
-
-        sqn = getSQN(stratexe.analyzers.sqn.get_analysis())
-
-        if plt:
-            cerebro.plot()
-
-        return cerebro.broker.getvalue(), totalwin, totalloss, pnl_net, sqn
+# def getSQN(analyzer):
+#     return round(analyzer.sqn, 2)
 
 
-#   except Exception as e:         # handle unexpected errors gracefully
-#       print('Error:', str(e))
-#       return 0, 0, 0, 0, 0
+# def runbacktest(
+#     datapath,
+#     start,
+#     end,
+#     period,
+#     strategy,
+#     upper=70,
+#     lower=30,
+#     commission_val=None,
+#     portofolio=10000.0,
+#     stake_val=1,
+#     quantity=0.01,
+#     stopLoss=0.0,
+#     plt=False,
+# ):
+
+#     # Create a cerebro entity
+#     cerebro = bt.Cerebro()
+
+#     # Add a FixedSize sizer according to the stake
+#     cerebro.addsizer(bt.sizers.FixedSize, stake=stake_val)  # Multiply the stake by X
+
+#     cerebro.broker.setcash(portofolio)
+
+#     if commission_val:
+#         cerebro.broker.setcommission(commission=commission_val / 100)
+
+#     # Add a strategy
+#     if strategy == "RSI":
+#         cerebro.addstrategy(
+#             RSIStrategy,
+#             maperiod=period,
+#             quantity=quantity,
+#             stopLoss=stopLoss,
+#             upper=upper,
+#             lower=lower,
+#         )
+#     else:
+#         print("no strategy")
+#         exit()
+
+#     compression, timeframe = timeFrame(datapath)
+
+#     # Create a Data Feed
+#     data = bt.feeds.GenericCSVData(
+#         dataname=datapath,
+#         dtformat=2,
+#         compression=compression,
+#         timeframe=timeframe,
+#         fromdate=datetime.datetime.strptime(start, "%Y-%m-%d"),
+#         todate=datetime.datetime.strptime(end, "%Y-%m-%d"),
+#         reverse=False,
+#     )
+
+#     # Add the Data Feed to Cerebro
+#     cerebro.adddata(data)
+
+#     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="ta")
+#     cerebro.addanalyzer(bt.analyzers.SQN, _name="sqn")
+
+#     #    try:     # convenience try/exception block
+#     if True:
+#         strat = cerebro.run()
+#         stratexe = strat[0]
+
+#         try:
+#             totalwin, totalloss, pnl_net = getWinLoss(
+#                 stratexe.analyzers.ta.get_analysis()
+#             )
+#         except KeyError:
+#             totalwin, totalloss, pnl_net = 0, 0, 0
+
+#         sqn = getSQN(stratexe.analyzers.sqn.get_analysis())
+
+#         if plt:
+#             cerebro.plot()
+
+#         return cerebro.broker.getvalue(), totalwin, totalloss, pnl_net, sqn
+
+
+# #   except Exception as e:         # handle unexpected errors gracefully
+# #       print('Error:', str(e))
+# #       return 0, 0, 0, 0, 0
