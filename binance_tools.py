@@ -492,4 +492,17 @@ class BinanceTools:
 
 if __name__ == "__main__":
     # BinanceTools.check_today_data_integrity()
-    BinanceTools.run_on_minute_start()
+
+    symbols = ["BTCUSDT", "ETHUSDT"]
+    ddb_client = BinanceTools.create_ddb_client()
+    db_path = "dfs://crypto_kline"
+    table_name = "kline_1min"
+
+    dates = (
+        ddb_client.loadTable(dbPath=db_path, tableName=table_name)
+        .select("max(open_time) as time")
+        .groupby("symbol")
+        .toDF()
+    )
+    start_dt = dates["time"].min().to_pydatetime()
+    print(start_dt)

@@ -57,10 +57,29 @@ def update_database(symbols):
         time.sleep(0.5)
 
 
+def get_latest_database_time():
+    symbols = ["BTCUSDT", "ETHUSDT"]
+    ddb_client = BinanceTools.create_ddb_client()
+    db_path = "dfs://crypto_kline"
+    table_name = "kline_1min"
+
+    dates = (
+        ddb_client.loadTable(dbPath=db_path, tableName=table_name)
+        .select("max(open_time) as time")
+        .groupby("symbol")
+        .toDF()
+    )
+    start_dt = dates["time"].min().to_pydatetime()
+    return start_dt
+
+
 if __name__ == "__main__":
     # update 1min kline data of BTCUSDT and ETHUSDT
     # BinanceTools.run_on_minute_start()
-    start_dt = datetime.datetime.now()
+
+    # start_dt = datetime.datetime.now()
+    start_dt = get_latest_database_time()
+
     symbols = ["BTCUSDT", "ETHUSDT"]
 
     update_database(symbols)
